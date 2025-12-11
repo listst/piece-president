@@ -22,10 +22,17 @@ export function WhirledPieceGlobe({
 }: WhirledPieceGlobeProps) {
     const router = useRouter();
     const mapRef = useRef<any>(null);
+
+    // Responsive zoom level based on viewport
+    const getInitialZoom = () => {
+        if (typeof window === 'undefined') return 2.2;
+        return window.innerWidth < 768 ? 1.2 : 2.2;
+    };
+
     const [viewState, setViewState] = useState({
         longitude: 50,
         latitude: 25,
-        zoom: 2.2,
+        zoom: getInitialZoom(),
     });
     const [spinning, setSpinning] = useState(autoSpin);
     const spinRef = useRef<NodeJS.Timeout | null>(null);
@@ -42,8 +49,16 @@ export function WhirledPieceGlobe({
         'too-early': '#a855f7',
     };
 
+    // Update zoom on window resize
     useEffect(() => {
+        const handleResize = () => {
+            const newZoom = getInitialZoom();
+            setViewState(prev => ({ ...prev, zoom: newZoom }));
+        };
+
+        window.addEventListener('resize', handleResize);
         return () => {
+            window.removeEventListener('resize', handleResize);
             if (spinRef.current) {
                 cancelAnimationFrame(spinRef.current as unknown as number);
             }
@@ -197,18 +212,18 @@ export function WhirledPieceGlobe({
             {/* Slide-in Panel */}
             <div
                 className={cn(
-                    "absolute top-0 right-0 h-full w-80 bg-brown-900/95 backdrop-blur-md border-l-4 border-gold-400 shadow-2xl transition-transform duration-500 ease-out z-10",
+                    "absolute top-0 right-0 h-full w-full md:w-80 bg-brown-900/95 backdrop-blur-md border-l-4 border-gold-400 shadow-2xl transition-transform duration-500 ease-out z-10",
                     selectedConflict ? "translate-x-0" : "translate-x-full"
                 )}
             >
                 {selectedConflict && (
-                    <div className="p-6 h-full flex flex-col">
+                    <div className="p-4 md:p-6 h-full flex flex-col overflow-y-auto">
                         {/* Close button */}
                         <button
                             onClick={handleClosePanel}
-                            className="absolute top-4 right-4 text-brown-300 hover:text-white transition-colors"
+                            className="absolute top-3 right-3 md:top-4 md:right-4 text-brown-300 hover:text-white transition-colors z-10 bg-brown-800 rounded-full w-8 h-8 flex items-center justify-center"
                         >
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                             </svg>
                         </button>
@@ -225,17 +240,17 @@ export function WhirledPieceGlobe({
                         </div>
 
                         {/* Conflict name */}
-                        <h3 className="font-display text-2xl font-bold text-cream mb-2">
+                        <h3 className="font-display text-xl md:text-2xl font-bold text-cream mb-2 pr-8">
                             {selectedConflict.name}
                         </h3>
 
                         {/* Tagline */}
-                        <p className="text-gold-400 text-sm italic mb-4">
+                        <p className="text-gold-400 text-xs md:text-sm italic mb-3 md:mb-4">
                             {selectedConflict.tagline}
                         </p>
 
                         {/* Piece Score */}
-                        <div className="bg-brown-800 rounded-lg p-4 mb-4">
+                        <div className="bg-brown-800 rounded-lg p-3 md:p-4 mb-3 md:mb-4 flex-shrink-0">
                             <div className="flex items-center justify-between mb-2">
                                 <span className="text-brown-300 text-sm">Piece Score</span>
                                 <span className="font-display text-2xl font-bold text-gold-400">
@@ -255,20 +270,22 @@ export function WhirledPieceGlobe({
                         </div>
 
                         {/* Trophy type */}
-                        <div className="text-sm text-brown-300 mb-4">
+                        <div className="text-xs md:text-sm text-brown-300 mb-3 md:mb-4 flex-shrink-0">
                             <span className="text-brown-400">Award: </span>
                             {SITE_CONFIG.trophyLabels[selectedConflict.trophyType]}
                         </div>
 
                         {/* Reality summary */}
-                        <p className="text-sm text-brown-200 flex-1 overflow-y-auto">
-                            {selectedConflict.reality.summary}
-                        </p>
+                        <div className="flex-1 overflow-y-auto mb-4">
+                            <p className="text-xs md:text-sm text-brown-200 leading-relaxed">
+                                {selectedConflict.reality.summary}
+                            </p>
+                        </div>
 
                         {/* View details button */}
                         <button
                             onClick={handleViewDetails}
-                            className="mt-4 w-full bg-gold-400 hover:bg-gold-500 text-brown-900 font-bold py-3 px-6 rounded-lg transition-colors"
+                            className="mt-auto w-full bg-gold-400 hover:bg-gold-500 text-brown-900 font-bold py-2.5 md:py-3 px-4 md:px-6 rounded-lg transition-colors flex-shrink-0 text-sm md:text-base"
                         >
                             View Full Details →
                         </button>
